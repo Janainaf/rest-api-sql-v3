@@ -2,6 +2,7 @@
 
 // load modules
 const express = require("express");
+const res = require("express/lib/response");
 const morgan = require("morgan");
 const Sequelize = require("sequelize");
 
@@ -53,6 +54,7 @@ const sequelize = new Sequelize({
   dialect: "sqlite",
   storage: "fsjstd-restapi.db",
 });
+
 (async () => {
   try {
     await sequelize.authenticate();
