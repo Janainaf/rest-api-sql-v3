@@ -86,8 +86,10 @@ router.post(
     let course;
     try {
       course = await Course.create(req.body);
-      res.status(201);
-      res.redirect("/courses/" + course.id);
+      res
+        .status(201)
+        .location("/courses/" + course.id)
+        .end();
     } catch (error) {
       console.log("there was an error", error);
     }

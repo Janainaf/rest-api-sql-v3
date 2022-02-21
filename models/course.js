@@ -7,9 +7,6 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate(models) {
-      // define association here
-    }
   }
   Course.init(
     {
@@ -25,7 +22,12 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Course.associate = (models) => {
-    Course.belongsTo(models.User);
+    Course.belongsTo(models.User, {
+      foreignKey: {
+        fieldName: "userId",
+        allowNull: false,
+      },
+    });
   };
 
   return Course;
