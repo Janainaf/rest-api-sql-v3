@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const models = require("../models");
 const { User, Course } = models;
+var bcrypt = require("bcryptjs");
 
 /* Handler function to wrap each route. */
 function asyncHandler(cb) {
@@ -35,9 +36,32 @@ router.get(
 router.post(
   "/users",
   asyncHandler(async (req, res) => {
+    const errors = [];
+
     try {
-      await User.create(req.body);
-      res.status(201).location("/").end();
+      const user = await User.build(req.body);
+
+      if (!user.firstName) {
+        errors.push('Please provide a value for "firstName"');
+      }
+      if (!user.lastName) {
+        errors.push('Please provide a value for "lastName"');
+      }
+      if (!user.emailAddress) {
+        errors.push('Please provide a value for "emailAddress"');
+      }
+      if (!user.password) {
+        errors.push('Please provide a value for "password"');
+      }
+      if (errors.length > 0) {
+        res.status(400).json({ errors });
+      } else {
+        if (user.password) {
+          user.password = bcrypt.hashSync(user.password, 10);
+        }
+        await user.save();
+        res.status(201).location("/").end();
+      }
     } catch (error) {
       console.log("there was an error", error);
     }
@@ -78,36 +102,68 @@ router.get(
     }
   })
 );
-//  Creates a new course, set the Location header to the URI for the newly created course,
-//  and return a 201 HTTP status code and no content.
+//  Creates a new course
 router.post(
   "/courses",
   asyncHandler(async (req, res) => {
     let course;
+    const errors = [];
+
     try {
-      course = await Course.create(req.body);
-      res
-        .status(201)
-        .location("/courses/" + course.id)
-        .end();
+      course = await Course.build(req.body);
+
+      if (!course.title) {
+        errors.push('Please provide a value for "title"');
+      }
+      if (!course.description) {
+        errors.push('Please provide a value for "description"');
+      }
+
+      if (errors.length > 0) {
+        res.status(400).json({ errors });
+      } else {
+        if (course) {
+          await course.save();
+          res
+            .status(201)
+            .location("/courses/" + course.id)
+            .end();
+        }
+      }
     } catch (error) {
       console.log("there was an error", error);
     }
   })
 );
 // Updates the corresponding course and return a 204 HTTP status code and no content.
+// When an existing course is updated using the /api/courses PUT route the application should include validation to ensure that the following required values are properly submitted in the request body:
+
+//     title
+//     description
+// If any of these required values are not properly submitted, the application should respond by sending a 400 HTTP status code and validation errors.
 
 router.put(
   "/courses/:id",
   asyncHandler(async (req, res) => {
     let course;
+    const errors = [];
+
     try {
       course = await Course.findByPk(req.params.id);
-      if (course) {
-        await course.update(req.body);
-        res.status(204).location("/courses/").end();
+      if (!course.title) {
+        errors.push('Please provide a value for "title"');
+      }
+      if (!course.description) {
+        errors.push('Please provide a value for "description"');
+      }
+
+      if (errors.length > 0) {
+        res.status(400).json({ errors });
       } else {
-        res.status(404).json("Course Not Found");
+        if (course) {
+          await course.update(req.body);
+          res.status(204).location("/courses/").end();
+        }
       }
     } catch (error) {
       console.log("there was an error", error);
