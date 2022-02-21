@@ -123,9 +123,9 @@ router.delete(
       const course = await Course.findByPk(req.params.id);
       if (course) {
         await course.destroy();
-        res.redirect("/courses");
+        res.status(204).location("/courses/").end();
       } else {
-        res.sendStatus(404);
+        res.status(404).json("Course Not Found");
       }
     } catch (error) {
       console.log("there was an error", error);
