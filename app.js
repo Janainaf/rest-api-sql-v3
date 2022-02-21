@@ -6,12 +6,15 @@ const res = require("express/lib/response");
 const morgan = require("morgan");
 const Sequelize = require("sequelize");
 
+var indexRouter = require("./routes/index");
+
 // variable to enable global error logging
 const enableGlobalErrorLogging =
   process.env.ENABLE_GLOBAL_ERROR_LOGGING === "true";
 
 // create the Express app
 const app = express();
+app.use("/", indexRouter);
 
 // setup morgan which gives us http request logging
 app.use(morgan("dev"));
@@ -23,6 +26,16 @@ app.get("/", (req, res) => {
   });
 });
 
+// user
+app.post("/api/users", async (req, res) => {
+  let user;
+  try {
+    user = await User.create(req.body);
+    res.redirect("/");
+  } catch (error) {
+    console.log(error);
+  }
+});
 // send 404 if no other route matched
 app.use((req, res) => {
   res.status(404).json({
