@@ -121,10 +121,10 @@ router.post(
   asyncHandler(async (req, res) => {
     let course;
     const errors = [];
-    course.userId = req.currentUser.id;
 
     try {
       course = await Course.build(req.body);
+      course.userId = req.currentUser.id;
 
       if (!course.title) {
         errors.push('Please provide a value for "title"');
@@ -154,10 +154,11 @@ router.put(
   asyncHandler(async (req, res) => {
     let course;
     const errors = [];
-    course.userId = req.currentUser.id;
 
     try {
       course = await Course.findByPk(req.params.id);
+      course.userId = req.currentUser.id;
+
       if (!course.title) {
         errors.push('Please provide a value for "title"');
       }
@@ -184,10 +185,10 @@ router.delete(
   "/courses/:id",
   authenticateUser,
   asyncHandler(async (req, res) => {
-    course.userId = req.currentUser.id;
-
     try {
       const course = await Course.findByPk(req.params.id);
+      course.userId = req.currentUser.id;
+
       if (course) {
         await course.destroy();
         res.status(204).location("/courses/").end();
