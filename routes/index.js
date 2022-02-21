@@ -107,7 +107,9 @@ router.get(
         });
         res.status(200).end();
       } else {
-        res.json(404 + " Not Found");
+        res.status(404).json({
+          message: "Route Not Found",
+        });
       }
     } catch (error) {
       console.log("there was an error", error);
@@ -121,7 +123,6 @@ router.post(
   asyncHandler(async (req, res) => {
     let course;
     const errors = [];
-
     try {
       course = await Course.build(req.body);
       course.userId = req.currentUser.id;
@@ -157,22 +158,27 @@ router.put(
 
     try {
       course = await Course.findByPk(req.params.id);
-      course.userId = req.currentUser.id;
+      const user = req.currentUser;
 
-      if (!course.title) {
-        errors.push('Please provide a value for "title"');
-      }
-      if (!course.description) {
-        errors.push('Please provide a value for "description"');
-      }
-
-      if (errors.length > 0) {
-        res.status(400).json({ errors });
-      } else {
-        if (course) {
-          await course.update(req.body);
-          res.status(204).location("/courses/").end();
+      if (course.userId === user.id) {
+        if (!course.title) {
+          errors.push('Please provide a value for "title"');
         }
+        if (!course.description) {
+          errors.push('Please provide a value for "description"');
+        }
+        if (errors.length > 0) {
+          res.status(400).json({ errors });
+        } else {
+          if (course) {
+            await course.update(req.body);
+            res.status(204).location("/courses/").end();
+          }
+        }
+      } else {
+        res.status(401).json({
+          message: "Not Authorized.",
+        });
       }
     } catch (error) {
       console.log("there was an error", error);
@@ -187,13 +193,18 @@ router.delete(
   asyncHandler(async (req, res) => {
     try {
       const course = await Course.findByPk(req.params.id);
-      course.userId = req.currentUser.id;
-
-      if (course) {
-        await course.destroy();
-        res.status(204).location("/courses/").end();
+      const user = req.currentUser;
+      if (user.id === course.userId) {
+        if (course) {
+          await course.destroy();
+          res.status(204).location("/courses/").end();
+        } else {
+          res.status(404).json("Course Not Found");
+        }
       } else {
-        res.status(404).json("Course Not Found");
+        res.status(401).json({
+          message: "Not Authorized.",
+        });
       }
     } catch (error) {
       console.log("there was an error", error);
