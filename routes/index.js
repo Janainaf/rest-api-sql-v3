@@ -16,18 +16,20 @@ function asyncHandler(cb) {
   };
 }
 
-// A /api/users GET route that will return all properties and values
-//for the currently authenticated User along with a 200 HTTP status code.
+// Returns  all properties and values for the currently authenticated User
 
 router.get(
   "/users",
+  authenticateUser,
   asyncHandler(async (req, res) => {
-    const users = await User.findAll({
+    const user = await User.findOne({
+      where: { id: req.currentUser.id },
+      attributes: {
+        exclude: ["password", "createdAt", "updatedAt"],
+      },
       include: [{ model: Course }],
     });
-    res.json({
-      users,
-    });
+    res.json({ user });
     res.status(200).end();
   })
 );
@@ -69,13 +71,17 @@ router.post(
   })
 );
 
-//// **** Course Routes ****** /////
 // Returns all courses including  User associated
 router.get(
   "/courses",
   asyncHandler(async (req, res) => {
     const courses = await Course.findAll({
-      include: [{ model: User }],
+      include: [
+        {
+          model: User,
+          attributes: { exclude: ["password", "createdAt", "updatedAt"] },
+        },
+      ],
     });
     res.json(courses.map((course) => course.get({ plain: true })));
     res.status(200).end();
@@ -88,7 +94,12 @@ router.get(
   asyncHandler(async (req, res) => {
     try {
       const course = await Course.findByPk(req.params.id, {
-        include: [{ model: User }],
+        include: [
+          {
+            model: User,
+            attributes: { exclude: ["password", "createdAt", "updatedAt"] },
+          },
+        ],
       });
       if (course) {
         res.json({
@@ -106,9 +117,11 @@ router.get(
 //  Creates a new course
 router.post(
   "/courses",
+  authenticateUser,
   asyncHandler(async (req, res) => {
     let course;
     const errors = [];
+    course.userId = req.currentUser.id;
 
     try {
       course = await Course.build(req.body);
@@ -125,10 +138,7 @@ router.post(
       } else {
         if (course) {
           await course.save();
-          res
-            .status(201)
-            .location("/courses/" + course.id)
-            .end();
+          res.status(201).location(`/courses/${course.id}`).end();
         }
       }
     } catch (error) {
@@ -140,9 +150,11 @@ router.post(
 
 router.put(
   "/courses/:id",
+  authenticateUser,
   asyncHandler(async (req, res) => {
     let course;
     const errors = [];
+    course.userId = req.currentUser.id;
 
     try {
       course = await Course.findByPk(req.params.id);
@@ -167,10 +179,13 @@ router.put(
   })
 );
 
-//     A /api/courses/:id DELETE route that will delete the corresponding course and return a 204 HTTP status code and no content.
+//  Deletes the corresponding course and return a 204 HTTP status code and no content.
 router.delete(
   "/courses/:id",
+  authenticateUser,
   asyncHandler(async (req, res) => {
+    course.userId = req.currentUser.id;
+
     try {
       const course = await Course.findByPk(req.params.id);
       if (course) {
