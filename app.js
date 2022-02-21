@@ -2,7 +2,6 @@
 
 // load modules
 const express = require("express");
-const res = require("express/lib/response");
 const morgan = require("morgan");
 const Sequelize = require("sequelize");
 
@@ -14,6 +13,7 @@ const enableGlobalErrorLogging =
 
 // create the Express app
 const app = express();
+app.use(express.json());
 app.use("/api", indexRouter);
 
 // setup morgan which gives us http request logging
@@ -26,16 +26,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// user
-app.post("/api/users", async (req, res) => {
-  let user;
-  try {
-    user = await User.create(req.body);
-    res.redirect("/");
-  } catch (error) {
-    console.log(error);
-  }
-});
 // send 404 if no other route matched
 app.use((req, res) => {
   res.status(404).json({

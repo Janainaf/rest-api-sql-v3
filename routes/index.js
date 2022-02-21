@@ -20,7 +20,9 @@ function asyncHandler(cb) {
 router.get(
   "/users",
   asyncHandler(async (req, res) => {
-    const users = await User.findAll();
+    const users = await User.findAll({
+      include: [{ model: Course }],
+    });
     res.json({
       users,
     });
@@ -28,17 +30,14 @@ router.get(
   })
 );
 
-//     A /api/users POST route that will create a new user,
-// set the Location header to "/", and return a 201 HTTP status code and no content.
+// Creates a new user, set the Location header to "/", and return a 201 HTTP status code and no content.
 
 router.post(
   "/users",
   asyncHandler(async (req, res) => {
-    let user;
     try {
-      user = await User.create(req.body);
-      res.status(200);
-      res.redirect("/");
+      await User.create(req.body);
+      res.status(201).location("/").end();
     } catch (error) {
       console.log("there was an error", error);
     }
@@ -46,7 +45,7 @@ router.post(
 );
 
 //// **** Course Routes ****** /////
-// A /api/courses GET route returns all courses including  User associated
+// Returns all courses including  User associated
 router.get(
   "/courses",
   asyncHandler(async (req, res) => {
@@ -58,7 +57,7 @@ router.get(
   })
 );
 
-//   A /api/courses/:id GET route returns corresponding course including  User associated
+//  Returns corresponding course including  User associated
 router.get(
   "/courses/:id",
   asyncHandler(async (req, res) => {
