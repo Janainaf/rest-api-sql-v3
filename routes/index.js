@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const models = require("../models");
 const { User, Course } = models;
-var bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
+const { authenticateUser } = require("../middleware/auth-user.js");
 
 /* Handler function to wrap each route. */
 function asyncHandler(cb) {
@@ -136,11 +137,6 @@ router.post(
   })
 );
 // Updates the corresponding course and return a 204 HTTP status code and no content.
-// When an existing course is updated using the /api/courses PUT route the application should include validation to ensure that the following required values are properly submitted in the request body:
-
-//     title
-//     description
-// If any of these required values are not properly submitted, the application should respond by sending a 400 HTTP status code and validation errors.
 
 router.put(
   "/courses/:id",
